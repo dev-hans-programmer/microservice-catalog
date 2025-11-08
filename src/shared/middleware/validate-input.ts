@@ -3,7 +3,7 @@ import createHttpError from 'http-errors';
 import { StatusCodes } from 'http-status-codes';
 import { ZodType, z } from 'zod';
 
-export const validateRequest =
+export const validateInput =
   <T>(schema: ZodType<T>) =>
   (req: Request, res: Response, next: NextFunction) => {
     try {
