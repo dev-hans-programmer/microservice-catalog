@@ -5,6 +5,8 @@ import { categorySchema } from './category-schema';
 import { CategoryService } from './category-service';
 import logger from '../../config/logger';
 import authenticate from '../../shared/middleware/authenticate';
+import authrorize from '../../shared/middleware/authorize';
+import { Roles } from '../../shared/utils/constants';
 
 const categoryRouter = express.Router();
 
@@ -14,6 +16,11 @@ const categoryController = new CategoryController(categoryService, logger);
 
 categoryRouter
   .route('/')
-  .post(authenticate, validateInput(categorySchema), categoryController.create);
+  .post(
+    authenticate,
+    authrorize(Roles.ADMIN),
+    validateInput(categorySchema),
+    categoryController.create,
+  );
 
 export default categoryRouter;

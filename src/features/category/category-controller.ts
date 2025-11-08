@@ -13,8 +13,6 @@ export class CategoryController extends BaseController {
   create: ControllerHandler = async (req, res) => {
     const payload = req.body as CategoryInput;
     this.logger.info(`Payload received for create category`);
-    res.json(payload);
-    return;
 
     const category = await this.categoryService.create(payload);
     this.sendResponse(

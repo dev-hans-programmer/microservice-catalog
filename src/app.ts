@@ -5,6 +5,16 @@ import { StatusCodes } from 'http-status-codes';
 import { globalErrorHandler } from './shared/middleware/global-error-handler';
 import categoryRouter from './features/category/category-router';
 
+declare module 'express-serve-static-core' {
+  interface Request {
+    auth: {
+      sub: string;
+      role: string;
+      id: number | string;
+    };
+  }
+}
+
 const app = express();
 
 app.use(express.json());
