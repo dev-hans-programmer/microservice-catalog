@@ -1,4 +1,5 @@
 import express from 'express';
+import cookieParser from 'cookie-parser';
 import createHttpError from 'http-errors';
 import { StatusCodes } from 'http-status-codes';
 import { globalErrorHandler } from './shared/middleware/global-error-handler';
@@ -7,6 +8,7 @@ import categoryRouter from './features/category/category-router';
 const app = express();
 
 app.use(express.json());
+app.use(cookieParser());
 
 app.get('/', (req, res) => {
   res.json({ message: 'Hello catalog service' });

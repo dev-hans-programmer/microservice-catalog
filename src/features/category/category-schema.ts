@@ -11,6 +11,20 @@ export const priceConfigurationSchema = z.object({
     .nonempty('At least one available option is required'),
 });
 
+export const attributeSchema = z.object({
+  name: z.string({ error: 'attribute name is required' }),
+  widgetType: z.enum(['switch', 'radio'] as const, {
+    error: (issue) =>
+      issue.input === undefined
+        ? 'widgetType is required'
+        : 'Value could be either switch | radio',
+  }),
+  availableOptions: z
+    .array(z.string().min(1))
+    .nonempty('At least one option is required'),
+  defaultValue: z.union([z.string(), z.number(), z.boolean(), z.null()]),
+});
+
 export const categorySchema = z.object({
   name: z
     .string({
@@ -23,6 +37,9 @@ export const categorySchema = z.object({
     .refine((data) => Object.keys(data).length > 0, {
       message: 'priceConfiguration must contain at least one key',
     }),
+  attributes: z
+    .array(attributeSchema, { error: 'attributes field is required' })
+    .nonempty('At least one attribute is required'),
 });
 
 export type CategoryInput = z.infer<typeof categorySchema>;
