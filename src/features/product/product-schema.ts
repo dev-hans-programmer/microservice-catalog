@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+const safeJsonParse = (value: string): unknown => JSON.parse(value) as unknown;
+
 // Accepts MongoDB ObjectId strings (24 hex chars)
 const objectIdRegex = /^[0-9a-fA-F]{24}$/;
 const objectId = () =>
@@ -14,15 +16,9 @@ const dateFromString = z.preprocess((arg: unknown) => {
   return undefined;
 }, z.date());
 
-export const priceOptionsSchema = z.object({
-  small: z.number(),
-  medium: z.number(),
-  large: z.number(),
-});
-
 export const priceConfigurationItemSchema = z.object({
   priceType: z.enum(['base', 'additional'], { error: 'priceType is required' }),
-  availableOptions: priceOptionsSchema,
+  availableOptions: z.record(z.string(), z.union([z.string(), z.number()])),
 });
 
 // A record keyed by variant/option name (e.g. "default", "extra_cheese")
@@ -48,18 +44,39 @@ export const productCreateSchema = z.object({
     .string({ error: 'Product description is required' })
     .min(1, 'Product description cannot be empty'),
   categoryId: objectId(),
-  image: z.url({ error: 'Image url is required' }),
-  priceConfiguration: priceConfigurationSchema.refine(
-    (data) => Object.keys(data).length > 0,
-    {
-      error: 'priceConfiguration must contain at least one key',
-    },
-  ),
+  image: z.string().optional(),
+  priceConfiguration: z
+    .union([
+      z.string(),
+      priceConfigurationSchema.refine((data) => Object.keys(data).length > 0, {
+        error: 'priceConfiguration must contain at least one key',
+      }),
+    ])
+    .transform((val) => {
+      if (typeof val === 'string') {
+        const parsed = safeJsonParse(val);
+        // Let Zod handle the error
+        return priceConfigurationSchema.parse(parsed);
+      }
+      return val;
+    }),
   attributes: z
-    .array(attributeSchema, { error: 'attributes is required' })
-    .nonempty('At least one option is requird for attributes'),
+    .union([
+      z.string(),
+      z
+        .array(attributeSchema, { error: 'attributes is required' })
+        .nonempty('At least one option is requird for attributes'),
+    ])
+    .transform((val) => {
+      if (typeof val === 'string') {
+        const parsed = safeJsonParse(val);
+        // FIXED: must validate as ARRAY, not a single object
+        return z.array(attributeSchema).min(1).parse(parsed);
+      }
+      return val;
+    }),
   tenantId: z.string({ error: 'tenant id is required' }).min(1),
-  isPublished: z.boolean().optional(),
+  isPublished: z.coerce.boolean(),
 });
 
 export const productResponseSchema = productCreateSchema.extend({

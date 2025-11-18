@@ -9,9 +9,8 @@ const priceConfigurationSchema = new Schema({
   },
   // if you expect fixed sizes, model them explicitly
   availableOptions: {
-    small: { type: Number, required: true },
-    medium: { type: Number, required: true },
-    large: { type: Number, required: true },
+    type: Map,
+    of: Number,
   },
 });
 
