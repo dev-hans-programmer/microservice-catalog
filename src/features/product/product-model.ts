@@ -1,19 +1,22 @@
-import { model, Schema } from 'mongoose';
+import { model, Schema, Document } from 'mongoose';
 import { Product } from './product-types';
 
 const priceConfigurationSchema = new Schema({
   priceType: {
     type: String,
     enum: ['base', 'additional'],
+    required: true,
   },
+  // if you expect fixed sizes, model them explicitly
   availableOptions: {
-    type: Map,
-    of: Number,
+    small: { type: Number, required: true },
+    medium: { type: Number, required: true },
+    large: { type: Number, required: true },
   },
 });
 
 const attributeValueSchema = new Schema({
-  name: String,
+  name: { type: String, required: true },
   value: Schema.Types.Mixed,
 });
 
@@ -31,9 +34,11 @@ const productSchema = new Schema(
       type: String,
       required: true,
     },
-    priceConfigurationSchema: {
+    // store price configurations keyed by some identifier (e.g. size key or variant)
+    priceConfiguration: {
       type: Map,
       of: priceConfigurationSchema,
+      required: true,
     },
     attributes: {
       type: [attributeValueSchema],
@@ -45,6 +50,7 @@ const productSchema = new Schema(
     categoryId: {
       type: Schema.Types.ObjectId,
       ref: 'Category',
+      required: true,
     },
     isPublished: {
       type: Boolean,
@@ -56,5 +62,5 @@ const productSchema = new Schema(
   },
 );
 
-const ProductModel = model<Product>('Product', productSchema);
+const ProductModel = model<Product & Document>('Product', productSchema);
 export default ProductModel;

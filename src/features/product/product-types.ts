@@ -11,7 +11,8 @@ export interface PriceConfiguration {
 
 export interface Attribute {
   name: string;
-  value: string;
+  // attributes can be booleans, numbers or strings (see `attributes.json`)
+  value: string | number | boolean;
 }
 export interface Product {
   name: string;
@@ -21,4 +22,8 @@ export interface Product {
   priceConfiguration: PriceConfiguration;
   attributes: Attribute[];
   tenantId: string;
+  // optional fields populated by Mongoose
+  _id?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
