@@ -2,7 +2,10 @@ import { z } from 'zod';
 
 // Accepts MongoDB ObjectId strings (24 hex chars)
 const objectIdRegex = /^[0-9a-fA-F]{24}$/;
-const objectId = () => z.string().regex(objectIdRegex, 'Invalid ObjectId');
+const objectId = () =>
+  z
+    .string({ error: 'Category Id is required' })
+    .regex(objectIdRegex, 'Invalid ObjectId for category id');
 
 // timestamps: accept Date or ISO string -> normalize to Date
 const dateFromString = z.preprocess((arg: unknown) => {
@@ -18,7 +21,7 @@ export const priceOptionsSchema = z.object({
 });
 
 export const priceConfigurationItemSchema = z.object({
-  priceType: z.enum(['base', 'additional']),
+  priceType: z.enum(['base', 'additional'], { error: 'priceType is required' }),
   availableOptions: priceOptionsSchema,
 });
 
@@ -29,18 +32,33 @@ export const priceConfigurationSchema = z.record(
 );
 
 export const attributeSchema = z.object({
-  name: z.string().min(1),
-  value: z.union([z.string(), z.number(), z.boolean()]),
+  name: z.string({ error: 'attribute name is required' }).min(1),
+  value: z.union([z.string(), z.number(), z.boolean()], {
+    error: 'Can be of type string|number|boolean',
+  }),
 });
 
 export const productCreateSchema = z.object({
-  name: z.string().min(1),
-  description: z.string().min(1),
+  name: z
+    .string({
+      error: 'Product name is required',
+    })
+    .min(1, 'Product name cannot be empty'),
+  description: z
+    .string({ error: 'Product description is required' })
+    .min(1, 'Product description cannot be empty'),
   categoryId: objectId(),
-  image: z.string().min(1), // keep simple; change to .url() if images must be full URLs
-  priceConfiguration: priceConfigurationSchema,
-  attributes: z.array(attributeSchema).optional(),
-  tenantId: z.string().min(1),
+  image: z.url({ error: 'Image url is required' }),
+  priceConfiguration: priceConfigurationSchema.refine(
+    (data) => Object.keys(data).length > 0,
+    {
+      error: 'priceConfiguration must contain at least one key',
+    },
+  ),
+  attributes: z
+    .array(attributeSchema, { error: 'attributes is required' })
+    .nonempty('At least one option is requird for attributes'),
+  tenantId: z.string({ error: 'tenant id is required' }).min(1),
   isPublished: z.boolean().optional(),
 });
 
