@@ -38,21 +38,26 @@ const attributeSchema = new Schema<Attribute>(
   { _id: false, timestamps: true, versionKey: false },
 );
 
-const categorySchema = new Schema<Category>({
-  name: {
-    type: String,
-    required: [true, 'Please provide a name for category'],
+const categorySchema = new Schema<Category>(
+  {
+    name: {
+      type: String,
+      required: [true, 'Please provide a name for category'],
+    },
+    priceConfiguration: {
+      type: Map,
+      of: priceConfigurationSchema,
+      required: true,
+    },
+    attributes: {
+      type: [attributeSchema],
+      required: true,
+    },
   },
-  priceConfiguration: {
-    type: Map,
-    of: priceConfigurationSchema,
-    required: true,
+  {
+    timestamps: true,
   },
-  attributes: {
-    type: [attributeSchema],
-    required: true,
-  },
-});
+);
 
 const CategoryModel = model<Category>('Category', categorySchema);
 export default CategoryModel;
