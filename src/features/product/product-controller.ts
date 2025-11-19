@@ -1,11 +1,13 @@
-import { v4 as uuidv4 } from 'uuid';
+import path from 'path';
+import createHttpError from 'http-errors';
 
+import { v4 as uuidv4 } from 'uuid';
 import { FileStorage } from '../../shared/types/storage';
 import { BaseController, ControllerHandler } from '../../shared/utils/response';
-import { ProductCreateInput } from './product-schema';
+import { ProductCreateInput, ProductUpdateInput } from './product-schema';
 import { ProductService } from './product-service';
 import { UploadedFile } from 'express-fileupload';
-import path from 'path';
+import { StatusCodes } from 'http-status-codes';
 
 export class ProductController extends BaseController {
   constructor(
@@ -34,10 +36,64 @@ export class ProductController extends BaseController {
     };
     const product = await this.productService.create(newPayload);
 
-    res.json({
-      message: 'Product has been created',
+    this.sendResponse(
+      res,
+      {
+        message: 'Product has been created',
+        id: product._id,
+        uri: this.storage.getObjectUri(imageName),
+      },
+      StatusCodes.CREATED,
+    );
+  };
+  update: ControllerHandler = async (req, res) => {
+    const { productId } = req.params;
+
+    const product = await this.productService.getById(productId!);
+
+    if (!product)
+      throw createHttpError(StatusCodes.NOT_FOUND, 'Product not found');
+
+    // Image upload
+
+    let imageName;
+
+    if (req.files) {
+      const image = req.files.image as UploadedFile;
+      const ext = path.extname(image.name);
+      const contentType = image.mimetype;
+      imageName = `${uuidv4()}${ext}`;
+
+      await this.storage.upload({
+        filename: imageName,
+        fileData: image.data,
+        contentType,
+      });
+
+      await this.storage.delete(product.image);
+    }
+
+    const updatedData = {
+      ...(req.body as ProductUpdateInput),
+      image: imageName ? imageName : product.image,
+    };
+
+    await this.productService.update(productId!, updatedData);
+
+    this.sendResponse(res, {
       id: product._id,
-      uri: this.storage.getObjectUri(imageName),
+      message: 'Product updated successfully',
     });
+  };
+  index: ControllerHandler = async (req, res) => {
+    const products = await this.productService.getAll();
+
+    this.sendResponse(res, { products });
+  };
+  getOne: ControllerHandler = async (req, res) => {
+    const { productId } = req.params;
+    const product = await this.productService.getById(productId!);
+
+    this.sendResponse(res, { product });
   };
 }

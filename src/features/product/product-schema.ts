@@ -79,6 +79,41 @@ export const productCreateSchema = z.object({
   isPublished: z.coerce.boolean(),
 });
 
+export const productUpdateSchema = productCreateSchema.partial().extend({
+  // categoryId optional but must be valid if present
+  categoryId: objectId().optional(),
+
+  priceConfiguration: z
+    .union([z.string(), priceConfigurationSchema])
+    .optional()
+    .transform((val) => {
+      if (val === undefined) return undefined;
+
+      if (typeof val === 'string') {
+        const parsed = safeJsonParse(val);
+        return priceConfigurationSchema.parse(parsed);
+      }
+      return val;
+    }),
+
+  attributes: z
+    .union([z.string(), z.array(attributeSchema)])
+    .optional()
+    .transform((val) => {
+      if (val === undefined) return undefined;
+
+      if (typeof val === 'string') {
+        const parsed = safeJsonParse(val);
+        return z.array(attributeSchema).min(1).parse(parsed);
+      }
+      return val;
+    }),
+
+  isPublished: z.coerce.boolean().optional(),
+
+  image: z.string().optional(),
+});
+
 export const productResponseSchema = productCreateSchema.extend({
   _id: objectId(),
   createdAt: dateFromString,
@@ -86,6 +121,7 @@ export const productResponseSchema = productCreateSchema.extend({
 });
 
 export type ProductCreateInput = z.infer<typeof productCreateSchema>;
+export type ProductUpdateInput = z.infer<typeof productUpdateSchema>;
 export type ProductResponse = z.infer<typeof productResponseSchema>;
 
 export default {

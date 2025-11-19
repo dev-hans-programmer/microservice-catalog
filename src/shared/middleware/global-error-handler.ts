@@ -55,6 +55,14 @@ export const globalErrorHandler = (
     error.message = dbError.message;
     error.status = 'fail';
   }
+
+  if (err.name === 'CastError') {
+    const id = (err as any).value;
+
+    error.statusCode = StatusCodes.BAD_REQUEST;
+    error.message = `Invalid id:${id}`;
+    error.status = 'fail';
+  }
   res.status(error.statusCode).json({
     status: error.status,
     message: error.message,
