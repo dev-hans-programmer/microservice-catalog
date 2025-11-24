@@ -8,6 +8,7 @@ import { ProductCreateInput, ProductUpdateInput } from './product-schema';
 import { ProductService } from './product-service';
 import { UploadedFile } from 'express-fileupload';
 import { StatusCodes } from 'http-status-codes';
+import { Roles } from '../../shared/utils/constants';
 
 export class ProductController extends BaseController {
   constructor(
@@ -53,6 +54,15 @@ export class ProductController extends BaseController {
 
     if (!product)
       throw createHttpError(StatusCodes.NOT_FOUND, 'Product not found');
+    // check if tenant matches
+
+    if (req.auth.role !== Roles.ADMIN) {
+      if (req.auth.tenant !== product.tenantId)
+        throw createHttpError(
+          StatusCodes.FORBIDDEN,
+          'You do not have permission to update this product',
+        );
+    }
 
     // Image upload
 

@@ -12,6 +12,7 @@ declare module 'express-serve-static-core' {
       sub: string;
       role: string;
       id: number | string;
+      tenant: string | number;
     };
   }
 }

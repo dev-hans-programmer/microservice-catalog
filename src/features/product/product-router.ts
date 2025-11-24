@@ -60,6 +60,10 @@ productRouter
     validateInput(productUpdateSchema),
     productController.update,
   )
-  .get(productController.getOne);
+  .get(
+    authenticate,
+    authrorize(Roles.ADMIN, Roles.MANAGER),
+    productController.getOne,
+  );
 
 export default productRouter;
