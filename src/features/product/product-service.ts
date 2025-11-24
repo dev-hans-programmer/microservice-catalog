@@ -1,6 +1,6 @@
 import ProductModel from './product-model';
 import { ProductCreateInput, ProductUpdateInput } from './product-schema';
-import { Filter, Product } from './product-types';
+import { Filter, PaginateQuery, paginationLabels } from './product-types';
 
 export class ProductService {
   create = (payload: ProductCreateInput) => ProductModel.create(payload);
@@ -15,7 +15,7 @@ export class ProductService {
         new: true,
       },
     );
-  getAll = async (q: string, filters: Filter) => {
+  getAll = async (q: string, filters: Filter, paginateQuery: PaginateQuery) => {
     const searchQueryRegexp = new RegExp(q, 'i');
 
     const matchQuery = {
@@ -47,6 +47,9 @@ export class ProductService {
       },
     ]);
 
-    return (await aggregate.exec()) as Product[];
+    return ProductModel.aggregatePaginate(aggregate, {
+      ...paginateQuery,
+      customLabels: paginationLabels,
+    });
   };
 }

@@ -35,3 +35,13 @@ export interface Filter {
   categoryId?: mongoose.Types.ObjectId;
   isPublished?: boolean;
 }
+
+export interface PaginateQuery {
+  page: number;
+  limit: number;
+}
+
+export const paginationLabels = {
+  totalDocs: 'total',
+  docs: 'data',
+};

@@ -114,7 +114,10 @@ export class ProductController extends BaseController {
       filters.categoryId = new mongoose.Types.ObjectId(categoryId as string);
     }
 
-    const products = await this.productService.getAll(q as string, filters);
+    const products = await this.productService.getAll(q as string, filters, {
+      page: req.query.page ? parseInt(req.query.page as string) : 1,
+      limit: req.query.limit ? parseInt(req.query.limit as string) : 10,
+    });
 
     this.sendResponse(res, { products });
   };

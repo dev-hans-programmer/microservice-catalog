@@ -1,5 +1,13 @@
-import { model, Schema, Document } from 'mongoose';
+import {
+  model,
+  Schema,
+  Document,
+  AggregatePaginateModel,
+  AggregatePaginateResult,
+} from 'mongoose';
 import { Product } from './product-types';
+
+import aggregatePaginate from 'mongoose-aggregate-paginate-v2';
 
 const priceConfigurationSchema = new Schema({
   priceType: {
@@ -61,5 +69,18 @@ const productSchema = new Schema(
   },
 );
 
-const ProductModel = model<Product & Document>('Product', productSchema);
+productSchema.plugin(aggregatePaginate);
+
+// Document type for a Product (mongoose Document + our Product interface)
+export type ProductDocument = Product & Document;
+
+// Create the model with the plugin model type so TypeScript recognizes
+// `aggregatePaginate` on the returned model.
+const ProductModel = model<
+  ProductDocument,
+  AggregatePaginateModel<ProductDocument>
+>('Product', productSchema);
+
 export default ProductModel;
+
+export type { AggregatePaginateResult };
