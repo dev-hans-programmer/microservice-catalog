@@ -1,5 +1,6 @@
 import path from 'path';
 import createHttpError from 'http-errors';
+import mongoose from 'mongoose';
 
 import { v4 as uuidv4 } from 'uuid';
 import { FileStorage } from '../../shared/types/storage';
@@ -9,6 +10,7 @@ import { ProductService } from './product-service';
 import { UploadedFile } from 'express-fileupload';
 import { StatusCodes } from 'http-status-codes';
 import { Roles } from '../../shared/utils/constants';
+import { Filter } from './product-types';
 
 export class ProductController extends BaseController {
   constructor(
@@ -96,7 +98,23 @@ export class ProductController extends BaseController {
     });
   };
   index: ControllerHandler = async (req, res) => {
-    const products = await this.productService.getAll();
+    const { q, tenantId, categoryId, isPublished } = req.query;
+
+    const filters: Filter = {};
+
+    if (isPublished === 'true') {
+      filters.isPublished = true;
+    }
+
+    if (tenantId) {
+      filters.tenantId = tenantId as string;
+    }
+
+    if (categoryId) {
+      filters.categoryId = new mongoose.Types.ObjectId(categoryId as string);
+    }
+
+    const products = await this.productService.getAll(q as string, filters);
 
     this.sendResponse(res, { products });
   };
